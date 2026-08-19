@@ -42,5 +42,3 @@ const noteSchema = new mongoose.Schema({
 
 module.exports=mongoose.model("Notes",noteSchema); //exporting the model so we can use it in
 
-
-
