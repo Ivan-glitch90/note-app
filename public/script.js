@@ -30,6 +30,8 @@ function renderNotes(notes) { //notes is the parameter being send to this functi
                     <p class="card-text mt-2">${note.content}</p>
                     <p class="text-muted small">${note.status}</p>
                     <button class="btn btn-danger btn-sm delete-btn" data-id="${note._id}">Delete</button>
+                    <button class="btn btn-danger btn-sm edit-btn" data-id="${note._id}">Edit Note</button>
+                    
                 </div>
 
             </div>
@@ -92,7 +94,76 @@ document.getElementById("notes-list").addEventListener("click", async (event) =>
         }
         loadNotes();
         }catch(error){
-            console.error("Something went wrong try again later");
+            return console.error("Something went wrong try again later");
         };
+    }
+});
+
+//edit button:
+document.getElementById("notes-list").addEventListener("click", async (event) => {
+    if (event.target.classList.contains("edit-btn")) {
+        try {
+            const noteId = event.target.dataset.id;
+            //same fetch using existing get by id route
+            const response = await fetch(API_BASE + "/usernote/" + noteId);
+            if (!response.ok) {
+                return console.log("Could not load that note. Please try again");
+            }
+            const note = await response.json();
+            // 2. pre-fill the modal's fields with this note's real data
+            document.getElementById("edit-id").value = note._id;
+            document.getElementById("edit-title").value = note.title;
+            document.getElementById("edit-content").value = note.content;
+            document.getElementById("edit-urgency").value = note.urgency;
+            document.getElementById("edit-status").value = note.status;
+            // 3. actually open the modal
+            const modal = new bootstrap.Modal(document.getElementById("editModal"));
+            modal.show();
+            
+
+
+        } catch (error) {
+            return console.error("Something went wrong please try again");
+        }
+    };
+});
+
+
+document.getElementById("edit-form").addEventListener("submit", async (event) => {
+    event.preventDefault();
+
+    try {
+        // 1. read the hidden edit-id, plus all four editable fields' values:
+        const noteId = document.getElementById("edit-id").value;
+        const noteTitle = document.getElementById("edit-title").value;
+        const noteContent = document.getElementById("edit-content").value;
+        const noteUrgency = Number(document.getElementById("edit-urgency").value);
+        const noteStatus = document.getElementById("edit-status").value;
+        // 2. build an object with title, content, urgency (as a Number!), status
+        const updatedNote={
+            owner:CURRENT_OWNER,
+             title:noteTitle,
+            content:noteContent,
+            urgency:noteUrgency,
+            status:noteStatus
+        };
+        // 3. fetch(`${API_BASE}/updatenote/${noteId}`, { method: "PATCH", headers, body: JSON.stringify(...) })
+       const response = await fetch(`${API_BASE}/updatenote/${noteId}`,{
+        method:"PATCH",
+        headers: { "Content-Type": "application/json" },
+        body:JSON.stringify(updatedNote)
+       });
+        // 4. check response.ok
+       if (!response.ok){
+        return console.error("Something went wrong please try again");
+        };
+        // 5. if successful: hide the modal, call loadNotes() to refresh the list
+        const modal = bootstrap.Modal.getInstance(document.getElementById("editModal"));
+        modal.hide();
+       loadNotes(); //calling loadnotes(); when hide is done
+
+
+    } catch (error) {
+        console.error("Something went wrong", error);
     }
 });
