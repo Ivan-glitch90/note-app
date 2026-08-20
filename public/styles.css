@@ -1,0 +1,16 @@
+body {
+    background-color: #f4f6f8;
+}
+
+.note-card {
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.note-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.1);
+}
+
+.urgency-badge-1, .urgency-badge-2 { background-color: #6c757d; }
+.urgency-badge-3 { background-color: #fd7e14; }
+.urgency-badge-4, .urgency-badge-5 { background-color: #dc3545; }

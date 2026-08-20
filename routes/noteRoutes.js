@@ -29,7 +29,7 @@ router.post("/", async (req, res) => {
 
 
     } catch (error) {
-        res.status(500).send("Something went wrong please try again.")
+        res.status(500).send("Something went wrong please try again.");
     }
 
 });
