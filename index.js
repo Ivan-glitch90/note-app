@@ -46,6 +46,13 @@ app.get("/logout", (req, res) => {
     req.logout(() => res.redirect("/"));
 });
 
+app.get("/api/me", (req, res) => {
+    if (req.isAuthenticated()) {
+        return res.json({ loggedIn: true, email: req.user.emails[0].value, name: req.user.displayName });
+    }
+    res.json({ loggedIn: false });
+});
+
 
 mongoose.connect(process.env.MONGO_URI)
 .then(()=>{

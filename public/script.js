@@ -15,6 +15,34 @@ async function loadNotes(){
 };
 
 
+async function loadAuthStatus() {
+    const authSection = document.getElementById("auth-section");
+
+    try {
+        const response = await fetch("/api/me");
+
+        if (!response.ok) {
+            return console.error("Could not check login status.");
+        }
+
+        const data = await response.json();
+
+        if (data.loggedIn) {
+            authSection.innerHTML = `
+                <span class="text-white me-3">${data.email}</span>
+                <a href="/logout" class="btn btn-outline-light btn-sm">Logout</a>
+            `;
+        } else {
+            authSection.innerHTML = `
+                <a href="/auth/google" class="btn btn-outline-light btn-sm">Sign in with Google</a>
+            `;
+        }
+
+    } catch (error) {
+        console.error("Something went wrong checking login status", error);
+    }
+}
+
 
 function renderNotes(notes) { //notes is the parameter being send to this function; from loadNotes(data);
     const notesList = document.getElementById("notes-list");
@@ -169,3 +197,5 @@ document.getElementById("edit-form").addEventListener("submit", async (event) =>
 document.getElementById("refresh-btn").addEventListener("click", () => {
     loadNotes();
 });
+
+loadAuthStatus();
