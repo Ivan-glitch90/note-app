@@ -1,11 +1,9 @@
-
-
-const CURRENT_OWNER = "test@example.com";
+//const CURRENT_OWNER = "test@example.com"; this was a placeholder; removing this to use real authentication; 
 const API_BASE = "/api/notes";
 
 async function loadNotes(){
     try{
-        const response = await fetch(API_BASE+"/owner/"+CURRENT_OWNER);
+        const response = await fetch(API_BASE+"/owner"); //old version -> const response = await fetch(API_BASE+"/owner/"+CURRENT_OWNER);
     if(!response.ok){
         return console.log("Something went wrong please try again later");
     }
@@ -49,7 +47,7 @@ document.getElementById("note-form").addEventListener("submit", async (event) =>
     const stats = document.getElementById("status").value;
     // 2. building an object matching what POST /api/notes expects: owner, title, content, urgency, status
    const newNote = {
-    owner:CURRENT_OWNER,
+    //owner:CURRENT_OWNER, 
     title:title,
     content:content,
     urgency:urgency,
@@ -141,7 +139,7 @@ document.getElementById("edit-form").addEventListener("submit", async (event) =>
         const noteStatus = document.getElementById("edit-status").value;
         // 2. build an object with title, content, urgency (as a Number!), status
         const updatedNote={
-            owner:CURRENT_OWNER,
+           // owner:CURRENT_OWNER,
              title:noteTitle,
             content:noteContent,
             urgency:noteUrgency,
@@ -166,4 +164,8 @@ document.getElementById("edit-form").addEventListener("submit", async (event) =>
     } catch (error) {
         console.error("Something went wrong", error);
     }
+});
+
+document.getElementById("refresh-btn").addEventListener("click", () => {
+    loadNotes();
 });

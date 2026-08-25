@@ -8,7 +8,8 @@ const Notes = require("../models/noteModel");
 
 
 router.post("/", async (req, res) => {
-    const { owner, title, content, urgency } = req.body;
+    const { title, content, urgency } = req.body;
+    const owner = req.user.emails[0].value;
 
     if (!owner) {
         return res.status(400).json({ error: "Owner is required." });
@@ -24,7 +25,7 @@ router.post("/", async (req, res) => {
     }
 
     try {
-        const newNote = await Notes.create(req.body);
+        const newNote = await Notes.create({ owner, title, content, urgency });
         res.status(201).json(newNote);
 
 
@@ -40,12 +41,10 @@ router.post("/", async (req, res) => {
 
 
 
-router.get("/owner/:owner", async (req, res) => {
+router.get("/owner", async (req, res) => {//removing :owner to remove it from the URL :owner is not needed because the route is protected/validated by requireLogin. so we know who's notes we are fetching old route: router.get("/owner/:owner", async (req, res)
     try {
-        const noteOwner = await Notes.find({ owner: req.params.owner });
-        if (noteOwner.length === 0) {
-            return res.status(404).json("No notes found for this person");
-        }
+        const noteOwner = await Notes.find({ owner: req.user.emails[0].value });
+        
         res.json(noteOwner);
 
     } catch (error) {
@@ -75,10 +74,11 @@ router.get("/userNote/:id", async (req, res) => {
 
 //using patch to find a note by its id and then mod it.
 router.patch("/updatenote/:id",async(req,res)=>{
+    const owner = req.user.emails[0].value;
     try{
         const updatedNote = await Notes.findByIdAndUpdate(
-            req.params.id, //telling what document to find - we can use raw "id" no need of "_id"
-            req.body, //what to change to that document.
+            req.params.id, //telling what document to find - we can use raw "id" no need of "_id" - spread the client's other fields, but force owner to the real logged-in user
+            {...req.body,owner}, //what to change to that document.
             {new:true} // return updated document; without this would return old doc.
         );
         if(!updatedNote){
@@ -108,3 +108,20 @@ router.delete("/delete/:id",async(req,res)=>{
 
 
 module.exports = router;
+
+
+router.delete("/delete/:id",async(req,res)=>{
+    try{
+        const deleteNote = await Notes.findOneAndDelete({owner:req.user.emails[0].value,
+            _id:req.params.id});
+        if(!deleteNote){
+            return res.status(404).send("No notes found");
+        }
+        res.status(200).json({message:"Note erased",deleteNote});
+    }
+    catch(error){
+        console.error(error);
+        return res.status(500).send("Error deleting the document, please try again");
+    }
+});
+
