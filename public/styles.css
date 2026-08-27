@@ -14,3 +14,13 @@ body {
 .urgency-badge-1, .urgency-badge-2 { background-color: #6c757d; }
 .urgency-badge-3 { background-color: #fd7e14; }
 .urgency-badge-4, .urgency-badge-5 { background-color: #dc3545; }
+
+#alert-placeholder {
+    position: fixed;
+    top: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1060;
+    min-width: 320px;
+    max-width: 90%;
+}

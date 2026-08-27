@@ -5,12 +5,14 @@ async function loadNotes(){
     try{
         const response = await fetch(API_BASE+"/owner"); //old version -> const response = await fetch(API_BASE+"/owner/"+CURRENT_OWNER);
     if(!response.ok){
-        return console.log("Something went wrong please try again later");
+        console.log("Something went wrong please try again later");
+        return showAlert("Could not load notes. Please try again","danger");
     }
     const data = await response.json();
     renderNotes(data);
     }catch(error){
-        return console.error("Something went wrong try again later");
+        console.log("Something went wrong please try again later");
+        return showAlert("Something is broken x_x. Please try again","danger");
     }
 };
 
@@ -22,7 +24,8 @@ async function loadAuthStatus() {
         const response = await fetch("/api/me");
 
         if (!response.ok) {
-            return console.error("Could not check login status.");
+            console.error("Could not check login status.");
+            return showAlert("Could not load status. Try again","danger");
         }
 
         const data = await response.json();
@@ -40,13 +43,17 @@ async function loadAuthStatus() {
 
     } catch (error) {
         console.error("Something went wrong checking login status", error);
+        return showAlert("Could not load status. Try again","danger");
     }
 }
 
 
 function renderNotes(notes) { //notes is the parameter being send to this function; from loadNotes(data);
     const notesList = document.getElementById("notes-list");
-    // is a reference to an existing empty spot on the page; the .map().join() chain builds real HTML out of your note data; and the final line writes that HTML into that spot, which is what makes it actually appear on screen.
+    if(notes.length === 0){
+        return notesList.innerHTML =  `<p class="text-muted"> You don't have any notes.</p>`
+    }
+    // is a reference to an existing empty spot on the page; the .map().join() chain builds real HTML out of note data; and the final line writes that HTML into that spot, which is what makes it actually appear on screen.
    notesList.innerHTML = notes.map(note => ` 
         <div class="col-md-4">
             <div class="card note-card shadow-sm">
@@ -67,7 +74,7 @@ function renderNotes(notes) { //notes is the parameter being send to this functi
 
 
 document.getElementById("note-form").addEventListener("submit", async (event) => {
-    event.preventDefault(); // stop the page from reloading — recall why from your weather app
+    event.preventDefault(); // stop the page from reloading — similar to weather app
     // 1. read each input's .value — title, content, urgency, status
     const title = document.getElementById("title").value;
     const content = document.getElementById("content").value;
@@ -75,7 +82,7 @@ document.getElementById("note-form").addEventListener("submit", async (event) =>
     const stats = document.getElementById("status").value;
     // 2. building an object matching what POST /api/notes expects: owner, title, content, urgency, status
    const newNote = {
-    //owner:CURRENT_OWNER, 
+    //owner:CURRENT_OWNER, //using real email with AUth
     title:title,
     content:content,
     urgency:urgency,
@@ -93,15 +100,17 @@ document.getElementById("note-form").addEventListener("submit", async (event) =>
 });
      // 4. check response.ok
    if(!response.ok){   
-    return console.error("Something went wrong please try again.");
-    };
-    // 5. if successful: clear the form, call loadNotes() again to refresh the list
+     console.error("Could not add note.");//keeping this for debugging just in case
+    return showAlert("Note couldn't be addded","danger")
    
+    };
+    // 5. if successful: show alert, clear the form, call loadNotes() again to refresh the list
+   showAlert("New note created!");
    document.getElementById("note-form").reset();//<-- is this correct and more simple??
    loadNotes();
 }catch(error){
     console.error("Something went wrong",error);
-
+    return showAlert("The server is not responding please try again");
    };
     
 });
@@ -112,15 +121,22 @@ document.getElementById("notes-list").addEventListener("click", async (event) =>
     if (event.target.classList.contains("delete-btn")) {
         try{
         const noteId = event.target.dataset.id;
+        const maybe = window.confirm("Are you sure you want to delete this note?")
+        if(!maybe){
+            return //not saying anything here just stoping the function if user clicks cancel
+        }
         const response = await fetch(API_BASE+"/delete/"+noteId,{
             method:"DELETE"
         });
         if(!response.ok){
-            return console.error("Something went wrong please try again later");
+            console.error("Could not erase the note");
+            return showAlert("Could not erase the note. Please try again", "danger");
         }
+        showAlert("Note erased!","warning");
         loadNotes();
         }catch(error){
-            return console.error("Something went wrong try again later");
+            console.error("Something went wrong try again later");
+            return showAlert("The server is not responding please try again");
         };
     }
 });
@@ -133,7 +149,9 @@ document.getElementById("notes-list").addEventListener("click", async (event) =>
             //same fetch using existing get by id route
             const response = await fetch(API_BASE + "/usernote/" + noteId);
             if (!response.ok) {
-                return console.log("Could not load that note. Please try again");
+                console.log("Could not open this note");
+                return showAlert("Could not open this note, please try again","danger");
+                
             }
             const note = await response.json();
             // 2. pre-fill the modal's fields with this note's real data
@@ -145,15 +163,13 @@ document.getElementById("notes-list").addEventListener("click", async (event) =>
             // 3. actually open the modal
             const modal = new bootstrap.Modal(document.getElementById("editModal"));
             modal.show();
-            
-
-
         } catch (error) {
-            return console.error("Something went wrong please try again");
+            console.error("Something went wrong please try again");
+            return showAlert("The server is not responding please try again");
         }
     };
+    
 });
-
 
 document.getElementById("edit-form").addEventListener("submit", async (event) => {
     event.preventDefault();
@@ -181,21 +197,35 @@ document.getElementById("edit-form").addEventListener("submit", async (event) =>
        });
         // 4. check response.ok
        if (!response.ok){
-        return console.error("Something went wrong please try again");
+        console.error("Could not edit the note");
+        return showAlert("Could not edit. Please try again","danger");
         };
         // 5. if successful: hide the modal, call loadNotes() to refresh the list
         const modal = bootstrap.Modal.getInstance(document.getElementById("editModal"));
         modal.hide();
-       loadNotes(); //calling loadnotes(); when hide is done
-
+        showAlert("Note edited!");
+        loadNotes(); //calling loadnotes(); when hide is done
+        
 
     } catch (error) {
         console.error("Something went wrong", error);
+        return showAlert("The server is not responding please try again");
     }
 });
 
 document.getElementById("refresh-btn").addEventListener("click", () => {
     loadNotes();
 });
+
+//showing alerts:
+function showAlert(message, type = "success") {
+    const placeholder = document.getElementById("alert-placeholder");
+    placeholder.innerHTML = `
+        <div class="alert alert-${type} alert-dismissible" role="alert">
+            <div>${message}</div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    `;
+}
 
 loadAuthStatus();
