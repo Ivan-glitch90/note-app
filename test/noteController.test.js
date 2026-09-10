@@ -153,3 +153,28 @@ describe("updateNote controller",()=>{
     });
 
 });
+
+describe("Get notes controller",()=>{
+    afterEach(()=>{
+        sinon.restore();
+    });
+
+    it("Get all the notes",async()=>{
+        
+        const allFakenotes = [{_id:"abc124",owner:"test@example.com",title:"buy milk",urgency:4}];
+        sinon.stub(Notes,"find").resolves(allFakenotes);
+
+        const req = {
+            user:{emails:[{value:"test@example.com"}]}//only using owner here; since is the only param that the controllers care about.
+        };
+
+        const res ={
+            status:sinon.stub().returnsThis(),
+            json:sinon.stub()
+        };
+
+        await noteController.getMynotes(req,res);
+        expect(res.status.called).to.be.false;
+        expect(res.json.calledWith(allFakenotes)).to.be.true;
+    });
+});
