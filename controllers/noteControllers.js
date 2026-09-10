@@ -62,7 +62,8 @@ exports.updateNote = async(req,res)=>{
         if(!updatedNote){
             return res.status(404).send("Cannot find a note with that id. Check id");
         }
-        res.json(updatedNote);
+        res.status(200).json({message:"Note updated",updatedNote});
+        
     }catch(error){
         console.error(error);
         return res.status(500).send("The server is unavailable. Please try again.");
